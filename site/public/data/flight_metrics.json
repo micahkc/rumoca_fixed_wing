@@ -1,0 +1,199 @@
+{
+  "source": "sportcub_mocap_6_26_26",
+  "file": "sportcub_mocap_6_26_26_flights.npz",
+  "n_airborne": 75303,
+  "duration_s": 313.8,
+  "mass_kg": 0.063,
+  "thr_max_N": 0.3,
+  "g": 9.81,
+  "note": "Measured from mocap; airspeed approximated by inertial speed (indoor, wind~0). Powered power-required bins assume T = thr_max*throttle; glide bins (glide_frac~1) are model-free.",
+  "velocity": [
+    {
+      "throttle_pct": 0.0,
+      "V": 5.19,
+      "climb": -0.02,
+      "pitch_deg": -2.0,
+      "n": 1856
+    },
+    {
+      "throttle_pct": 15.0,
+      "V": 4.8,
+      "climb": -0.01,
+      "pitch_deg": -0.9,
+      "n": 4327
+    },
+    {
+      "throttle_pct": 26.0,
+      "V": 4.71,
+      "climb": -0.02,
+      "pitch_deg": -2.3,
+      "n": 5528
+    },
+    {
+      "throttle_pct": 45.0,
+      "V": 4.63,
+      "climb": -0.03,
+      "pitch_deg": -4.4,
+      "n": 5468
+    },
+    {
+      "throttle_pct": 50.0,
+      "V": 4.58,
+      "climb": 0.01,
+      "pitch_deg": -4.0,
+      "n": 14682
+    },
+    {
+      "throttle_pct": 74.0,
+      "V": 4.51,
+      "climb": 0.03,
+      "pitch_deg": -2.6,
+      "n": 6631
+    },
+    {
+      "throttle_pct": 88.0,
+      "V": 4.8,
+      "climb": -0.03,
+      "pitch_deg": -3.9,
+      "n": 5879
+    }
+  ],
+  "power_required": [
+    {
+      "V": 4.18,
+      "p_req": 0.689,
+      "p_avail": 0.633,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.01,
+      "n": 3501
+    },
+    {
+      "V": 4.38,
+      "p_req": 0.718,
+      "p_avail": 0.662,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.02,
+      "n": 10765
+    },
+    {
+      "V": 4.63,
+      "p_req": 0.712,
+      "p_avail": 0.692,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.01,
+      "n": 11042
+    },
+    {
+      "V": 4.85,
+      "p_req": 0.742,
+      "p_avail": 0.728,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.06,
+      "n": 6321
+    },
+    {
+      "V": 5.11,
+      "p_req": 0.822,
+      "p_avail": 0.781,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.07,
+      "n": 4365
+    },
+    {
+      "V": 5.35,
+      "p_req": 0.666,
+      "p_avail": 0.741,
+      "throttle_pct": 46.0,
+      "glide_frac": 0.06,
+      "n": 2389
+    },
+    {
+      "V": 5.61,
+      "p_req": 0.514,
+      "p_avail": 0.541,
+      "throttle_pct": 32.0,
+      "glide_frac": 0.11,
+      "n": 1165
+    },
+    {
+      "V": 5.87,
+      "p_req": 0.752,
+      "p_avail": 0.746,
+      "throttle_pct": 43.0,
+      "glide_frac": 0.14,
+      "n": 1329
+    },
+    {
+      "V": 6.1,
+      "p_req": 0.91,
+      "p_avail": 0.927,
+      "throttle_pct": 51.0,
+      "glide_frac": 0.11,
+      "n": 728
+    },
+    {
+      "V": 6.37,
+      "p_req": 1.176,
+      "p_avail": 0.972,
+      "throttle_pct": 50.0,
+      "glide_frac": 0.18,
+      "n": 324
+    }
+  ],
+  "turn": [
+    {
+      "V": 4.34,
+      "bank_deg": 21.1,
+      "turn_rate_dps": 43.2,
+      "radius_m": 5.73,
+      "beta_deg": 5.7,
+      "climb": -0.01,
+      "n": 8034
+    },
+    {
+      "V": 4.74,
+      "bank_deg": 28.1,
+      "turn_rate_dps": 52.3,
+      "radius_m": 5.18,
+      "beta_deg": 4.5,
+      "climb": -0.03,
+      "n": 16338
+    },
+    {
+      "V": 5.2,
+      "bank_deg": 32.9,
+      "turn_rate_dps": 61.7,
+      "radius_m": 4.84,
+      "beta_deg": 3.3,
+      "climb": -0.0,
+      "n": 11574
+    },
+    {
+      "V": 5.74,
+      "bank_deg": 35.6,
+      "turn_rate_dps": 72.5,
+      "radius_m": 4.55,
+      "beta_deg": 4.3,
+      "climb": -0.06,
+      "n": 5865
+    },
+    {
+      "V": 6.2,
+      "bank_deg": 38.4,
+      "turn_rate_dps": 76.7,
+      "radius_m": 4.54,
+      "beta_deg": 3.9,
+      "climb": -0.09,
+      "n": 3317
+    },
+    {
+      "V": 6.66,
+      "bank_deg": 33.3,
+      "turn_rate_dps": 64.9,
+      "radius_m": 5.9,
+      "beta_deg": 4.0,
+      "climb": -0.27,
+      "n": 1669
+    }
+  ]
+}

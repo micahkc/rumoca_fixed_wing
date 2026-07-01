@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rumoca Fixed-Wing Workbench</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./src/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.49.0/min/vs/editor/editor.main.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Rumoca fixed-wing</p>
+        <h1>Modelica Workbench</h1>
+      </div>
+      <div class="header-links">
+        <a class="repo-link" href="https://github.com/CogniPilot/rumoca_fixed_wing" target="_blank" rel="noreferrer">Project Repository</a>
+        <div class="run-meta" id="run-meta">Loading flight data...</div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="controls" aria-label="Flight data filters">
+        <div>
+          <span class="control-label">Model</span>
+          <div class="segmented" id="model-tabs"></div>
+        </div>
+        <label>
+          Dataset
+          <select id="scenario-select"></select>
+        </label>
+        <label id="explorer-flight-wrap" hidden>
+          Flight
+          <select id="explorer-flight"></select>
+        </label>
+      </section>
+
+      <section class="panel playback-panel">
+        <div class="panel-heading">
+          <h2>Aircraft Playback</h2>
+          <p id="playback-status">Loading trajectory...</p>
+          <p id="explorer-status" class="explorer-status"></p>
+        </div>
+        <div class="view-tabs" id="playback-tabs" aria-label="Simulator mode">
+          <button type="button" data-playback-view="playback" class="active">Playback</button>
+          <button type="button" data-playback-view="keyboard">Keyboard Flight</button>
+          <button type="button" data-playback-view="autopilot">Autopilot</button>
+        </div>
+        <div id="animation-view" class="playback-view sim-workspace">
+          <div class="playback-stage">
+            <div id="aircraft-playback" class="aircraft-playback" aria-label="Animated aircraft state playback"></div>
+            <div id="autopilot-start-overlay" class="autopilot-start-overlay" role="dialog" aria-live="polite" hidden>
+              <div class="autopilot-start-dialog">
+                <strong>Autopilot ready</strong>
+                <span>Compile the fixed wing and CubControl Modelica, then run the lockstep simulator.</span>
+                <button type="button" id="autopilot-overlay-start">Start sim</button>
+              </div>
+            </div>
+            <div class="control-hud" aria-label="Control inputs">
+              <div><span>Mode</span><b id="control-mode-value">--</b></div>
+              <div><span>Thrust</span><button type="button" class="trim-button" data-trim="throttle" data-delta="-0.05" title="Decrease throttle trim">&#9664;</button><span class="control-bar thrust"><span id="control-thrust" class="control-fill"></span><span id="control-thrust-trim" class="trim-marker"></span></span><button type="button" class="trim-button" data-trim="throttle" data-delta="0.05" title="Increase throttle trim">&#9654;</button><b id="control-thrust-value">0.00</b></div>
+              <div><span>Aileron</span><button type="button" class="trim-button" data-trim="roll" data-delta="0.05" title="Trim left">&#9664;</button><span class="control-bar signed"><span id="control-aileron" class="control-fill"></span><span id="control-aileron-trim" class="trim-marker"></span></span><button type="button" class="trim-button" data-trim="roll" data-delta="-0.05" title="Trim right">&#9654;</button><b id="control-aileron-value">0.00</b></div>
+              <div><span>Elevator</span><button type="button" class="trim-button" data-trim="pitch" data-delta="-0.05" title="Trim down">&#9664;</button><span class="control-bar signed"><span id="control-elevator" class="control-fill"></span><span id="control-elevator-trim" class="trim-marker"></span></span><button type="button" class="trim-button" data-trim="pitch" data-delta="0.05" title="Trim up">&#9654;</button><b id="control-elevator-value">0.00</b></div>
+              <div><span>Rudder</span><button type="button" class="trim-button" data-trim="yaw" data-delta="-0.05" title="Trim left">&#9664;</button><span class="control-bar signed"><span id="control-rudder" class="control-fill"></span><span id="control-rudder-trim" class="trim-marker"></span></span><button type="button" class="trim-button" data-trim="yaw" data-delta="0.05" title="Trim right">&#9654;</button><b id="control-rudder-value">0.00</b></div>
+            </div>
+          </div>
+          <div class="playback-controls" aria-label="Playback controls">
+            <div class="playback-group flight-group" aria-label="Flight controls">
+              <label class="camera-label" aria-label="Camera view">
+                <select id="playback-camera">
+                  <option value="first">First person</option>
+                  <option value="chase" selected>Chase</option>
+                  <option value="follow">Follow</option>
+                  <option value="observer">Observer</option>
+                </select>
+              </label>
+            </div>
+            <div class="model-picker" id="playback-model-wrap" hidden>
+              <span class="model-title">Model</span>
+              <span id="playback-model-summary" class="single-model-label">Modelica</span>
+            </div>
+            <div id="playback-flight-status" class="playback-flight-status" role="status" aria-live="polite"></div>
+            <label class="scrub-label" aria-label="Time">
+              <div class="timeline-control">
+                <button type="button" id="playback-toggle" aria-label="Pause" title="Pause">&#10074;&#10074;</button>
+                <div class="scrub-wrap">
+                  <input id="playback-scrub" type="range" min="0" max="1" step="0.001" value="0">
+                  <div id="trail-window" aria-hidden="true"></div>
+                  <div id="trail-past-handle" title="Drag to set how many seconds of past trail to show"></div>
+                  <div id="trail-future-handle" title="Drag to set how many seconds of future trail to show"></div>
+                </div>
+                <button type="button" id="playback-fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">&#9974;</button>
+              </div>
+              <div id="scrub-legend" class="scrub-legend" hidden></div>
+            </label>
+            <button type="button" id="playback-predict" title="Set the prediction initial condition at the current time">Predict here</button>
+            <button type="button" id="keyboard-start" class="sim-mode-action" title="Compile the edited model and fly with the keyboard">Start flight</button>
+            <button type="button" id="autopilot-start" class="sim-mode-action" title="Compile the edited model and fly the waypoint circuit">Start autopilot</button>
+            <div class="playback-group selector-group" aria-label="Playback selectors">
+              <label class="segment-label">
+                Flight
+                <select id="playback-segment"></select>
+              </label>
+              <label class="speed-label" aria-label="Speed">
+                <select id="playback-speed">
+                  <option value="0.25">0.25x</option>
+                  <option value="0.5">0.5x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="2">2x</option>
+                  <option value="4">4x</option>
+                </select>
+              </label>
+            </div>
+            <button
+              type="button"
+              id="flight-key-help"
+              aria-label="Keyboard flight controls"
+              title="Keyboard flight: W/S throttle, Arrow keys pitch/roll, A/D rudder, C camera, Space toggles SAFE when available, R resets aircraft and trims."
+            >?</button>
+          </div>
+          <div id="keyboard-view" class="sim-mode-panel" hidden>
+            <div class="sim-mode-copy">
+              <b>Keyboard flight</b>
+              <span>W/S throttle, Arrow keys pitch/roll, A/D rudder, C camera, Space SAFE, R reset.</span>
+            </div>
+          </div>
+          <div id="autopilot-view" class="sim-mode-panel" hidden>
+            <div class="sim-mode-copy">
+              <b>Autopilot</b>
+              <span>Compiled Modelica lockstep controller over the PURT circuit.</span>
+            </div>
+            <div class="autopilot-rate-controls" aria-label="Autopilot update rate">
+              <button type="button" data-autopilot-rate="20">20 Hz</button>
+              <button type="button" data-autopilot-rate="50" class="active">50 Hz</button>
+              <button type="button" data-autopilot-rate="100">100 Hz</button>
+              <button type="button" id="autopilot-pause">Pause</button>
+              <button type="button" id="autopilot-download-log">Download log</button>
+            </div>
+            <div id="waypoint-readout" class="waypoint-readout"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel modelica-workbench" aria-label="Modelica editor">
+        <div id="modelica-flight-panel" class="modelica-flight-panel">
+          <div class="modelica-flight-toolbar">
+            <div id="modelica-source-tabs" class="modelica-source-tabs" aria-label="Modelica source">
+              <button type="button" data-editor-mode="plant" class="active">Fixed wing</button>
+              <button type="button" data-editor-mode="autopilot">Autopilot</button>
+            </div>
+            <button type="button" id="modelica-compile">Compile</button>
+            <button type="button" id="modelica-metrics" title="Compile the edited model and run a flight-envelope sweep: turn radius, actual bank angle, drift vs speed, and Vc (mid-speed).">Metrics</button>
+            <button type="button" id="modelica-reset">Reset</button>
+            <button type="button" id="modelica-replay">Replay</button>
+            <button type="button" id="modelica-clear-replay">Clear inputs</button>
+            <button type="button" id="modelica-download-log">Download log</button>
+            <button type="button" id="modelica-clear-log">Clear log</button>
+            <span id="modelica-flight-status">Rumoca Modelica editor</span>
+          </div>
+          <div id="modelica-busy" class="modelica-busy" role="status" aria-live="polite" aria-busy="true" hidden>
+            <span class="modelica-spinner" aria-hidden="true"></span>
+            <span class="modelica-busy-copy">
+              <strong id="modelica-busy-title">Working</strong>
+              <span id="modelica-busy-detail">Rumoca is preparing the model.</span>
+            </span>
+          </div>
+          <div id="modelica-diagnostics-panel" class="modelica-diagnostics-panel" hidden></div>
+          <div id="modelica-metrics-output" class="modelica-metrics-output" hidden></div>
+          <div id="modelica-log-panel" class="modelica-log-panel" aria-label="Simulation log">
+            <div class="modelica-log-heading">
+              <strong>Log</strong>
+              <span id="modelica-log-count">0 events</span>
+            </div>
+            <div id="modelica-log-list" class="modelica-log-list" role="log" aria-live="polite"></div>
+          </div>
+          <div id="modelica-flight-editor" class="modelica-flight-editor" aria-label="Modelica source editor"></div>
+          <textarea id="modelica-flight-source" class="modelica-flight-source" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <section class="panel analysis-support" hidden>
+        <div id="timeseries-status"></div>
+        <div id="timeseries-plots"></div>
+      </section>
+
+      <div id="leaderboard-body" hidden></div>
+      <div id="dataset-body" hidden></div>
+      <div id="best-method" hidden></div>
+      <div id="best-score" hidden></div>
+      <div id="method-count" hidden></div>
+      <div id="dataset-count" hidden></div>
+      <div id="maneuver-list" hidden></div>
+    </main>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@cognipilot/rumoca": "./public/wasm/rumoca_bind_wasm.js",
+          "@cognipilot/rumoca/interactive": "./public/wasm/rumoca_interactive.js",
+          "@cognipilot/rumoca/modelica-language": "./public/wasm/modelica_language.js",
+          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="./src/app.js" type="module"></script>
+    <script src="./src/explorer.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Raw and temporary payloads do not belong in the committed compact data tree.
+**/raw/
+**/downloads/
+**/cache/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.zst
+

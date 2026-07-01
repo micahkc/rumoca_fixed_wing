@@ -1,0 +1,620 @@
+{
+  "dataset_registry": [
+    {
+      "generator": "models.aircraft6dof.generate_dataset",
+      "id": "aircraft_6dof_open_loop",
+      "local_data_dir": "work/data/aircraft_6dof_open_loop",
+      "local_data_files": {},
+      "model_family": "aircraft6dof",
+      "observation_type": "direct_state_and_pose",
+      "source_type": "synthetic_simulation",
+      "status": "generated",
+      "tags": [],
+      "title": "6-DOF open-loop maneuver"
+    },
+    {
+      "generator": "models.aircraft6dof.generate_dataset",
+      "id": "aircraft_6dof_sine_sweep",
+      "local_data_dir": "work/data/aircraft_6dof_sine_sweep",
+      "local_data_files": {},
+      "model_family": "aircraft6dof",
+      "observation_type": "direct_state_and_pose",
+      "source_type": "synthetic_simulation",
+      "status": "generated",
+      "tags": [],
+      "title": "6-DOF sine-sweep maneuver"
+    },
+    {
+      "generator": "models.aircraft6dof.generate_dataset",
+      "id": "aircraft_6dof_aggressive",
+      "local_data_dir": "work/data/aircraft_6dof_aggressive",
+      "local_data_files": {},
+      "model_family": "aircraft6dof",
+      "observation_type": "direct_state_and_pose",
+      "source_type": "synthetic_simulation",
+      "status": "generated",
+      "tags": [],
+      "title": "6-DOF aggressive nonlinear stall maneuver"
+    },
+    {
+      "generator": "models.aircraft6dof.generate_dataset",
+      "id": "aircraft_6dof_trim_grid",
+      "local_data_dir": "work/data/aircraft_6dof_trim_grid",
+      "local_data_files": {},
+      "model_family": "aircraft6dof",
+      "observation_type": "direct_state_and_pose",
+      "source_type": "synthetic_simulation",
+      "status": "generated",
+      "tags": [],
+      "title": "6-DOF local trim-grid small-deviation maneuver"
+    },
+    {
+      "airframe": "HobbyZone Sport Cub S 2",
+      "canonical_archive": null,
+      "collection_date": "2026-04-17",
+      "id": "sportcub_mocap_4_17_26",
+      "inputs": [
+        "aileron",
+        "elevator",
+        "throttle",
+        "rudder"
+      ],
+      "local_data_dir": "data",
+      "local_data_files": {
+        "train": "data/sportcub_mocap_4_17_26_train.npz",
+        "validation": "data/sportcub_mocap_4_17_26_validation.npz"
+      },
+      "model_family": "aircraft6dof",
+      "notes": "Personal/institutional cloud URL is accepted only as a provisional source. Mirror to Zenodo, Purdue, or another durable archive before treating this as canonical.",
+      "observation_type": "mocap_position_attitude",
+      "outputs": [
+        "position_enu",
+        "quaternion_wxyz"
+      ],
+      "processing": {
+        "script": "sport_cub_processing/v3_sportcub_pipeline.py",
+        "step3_segments": "Sports_Cub_Data_17April/<case>/step3_segments/<class>/*.csv"
+      },
+      "sample_rate_hz": 100,
+      "source_type": "real_mocap",
+      "status": "provisional",
+      "temporary_source": {
+        "accessed_utc": "2026-05-18",
+        "bytes": null,
+        "provided_by": "student contribution on real_data branch",
+        "provider": "purdue_sharepoint",
+        "sha256": null,
+        "url": "https://purdue0-my.sharepoint.com/:f:/g/personal/bansa171_purdue_edu/IgBwkBCsF9-5QK8lq7D4cQtDAS_URbpbvCmp_aWQzZYHBPQ?email=jgoppert%40purdue.edu&e=gGUQKz"
+      },
+      "title": "Sport Cub S 2 motion-capture 6DOF dataset, 2026-04-17"
+    },
+    {
+      "airframe": "HobbyZone Sport Cub S 2",
+      "canonical_archive": null,
+      "collection_date": "2026-05-22",
+      "id": "sportcub_mocap_5_22_26",
+      "inputs": [
+        "throttle",
+        "elevator",
+        "aileron",
+        "rudder"
+      ],
+      "local_data_dir": "data",
+      "local_data_files": {
+        "flights": "data/sportcub_mocap_5_22_26_flights.npz",
+        "train": "data/sportcub_mocap_5_22_26_train.npz",
+        "validation": "data/sportcub_mocap_5_22_26_validation.npz"
+      },
+      "model_family": "aircraft6dof",
+      "notes": "Full piloted laps: stabilized circuits (SAFE inner loop on, flight_mode=1) with the inner loop switched off mid-facility for maneuvers (flight_mode=0). The transmitter mode channel is recorded, so maneuver windows are exact. The segmenter classifies ground/stabilized/manual via mocap altitude and the mode channel, quality-gates manual windows, estimates per-flight bare-airframe trim from quasi-steady manual samples, and exports cross-flight train/validation splits. Resampled at the native ~240 Hz Qualisys odometry rate (the auto bag streams 100 Hz natively). Mirror raw bags to a durable archive before treating this as canonical.",
+      "observation_type": "mocap_position_attitude",
+      "outputs": [
+        "position_enu",
+        "quaternion_wxyz",
+        "flight_mode"
+      ],
+      "processing": {
+        "convert": "dataset_tools/sportcub_mocap_5_22_26/convert.py",
+        "segment": "dataset_tools/sportcub_mocap_5_22_26/segment.py"
+      },
+      "sample_rate_hz": 240,
+      "source_type": "real_mocap",
+      "status": "provisional",
+      "temporary_source": {
+        "accessed_utc": "2026-06-10",
+        "bytes": null,
+        "provided_by": "PURT indoor testbed flight session",
+        "provider": "local rosbag2 MCAP recordings under data/data_20260522 (gitignored)",
+        "sha256": null,
+        "url": null
+      },
+      "title": "Sport Cub S 2 motion-capture full-lap 6DOF dataset, 2026-05-22"
+    },
+    {
+      "airframe": "HobbyZone Sport Cub S 2",
+      "canonical_archive": null,
+      "collection_date": "2026-06-26",
+      "id": "sportcub_mocap_6_26_26",
+      "inputs": [
+        "throttle",
+        "elevator",
+        "aileron",
+        "rudder"
+      ],
+      "local_data_dir": "data",
+      "local_data_files": {
+        "flights": "data/sportcub_mocap_6_26_26_flights.npz",
+        "ground": "data/sportcub_mocap_6_26_26_ground.npz",
+        "train": "data/sportcub_mocap_6_26_26_train.npz",
+        "validation": "data/sportcub_mocap_6_26_26_validation.npz"
+      },
+      "model_family": "aircraft6dof",
+      "notes": "Local rosbag2 MCAP recordings from 2026-06-26. Convert with dataset_tools.sportcub_mocap_6_26_26.convert and segment with dataset_tools.sportcub_mocap_6_26_26.segment. Raw bags are retained under data/data_20260626/ and are gitignored.",
+      "observation_type": "mocap_position_attitude",
+      "outputs": [
+        "position_enu",
+        "quaternion_wxyz",
+        "flight_mode"
+      ],
+      "processing": {
+        "convert": "dataset_tools/sportcub_mocap_6_26_26/convert.py",
+        "segment": "dataset_tools/sportcub_mocap_6_26_26/segment.py"
+      },
+      "sample_rate_hz": 240,
+      "source_type": "real_mocap",
+      "status": "provisional",
+      "temporary_source": {
+        "accessed_utc": "2026-06-26",
+        "bytes": null,
+        "provided_by": "PURT indoor testbed flight session",
+        "provider": "local rosbag2 MCAP recordings under data/data_20260626 (gitignored)",
+        "sha256": null,
+        "url": null
+      },
+      "title": "Sport Cub S 2 motion-capture full-lap 6DOF dataset, 2026-06-26"
+    }
+  ],
+  "files": {
+    "maneuver_summary": "maneuver_summary.json",
+    "method_results": "method_results.json",
+    "method_traces": "method_traces.json",
+    "playback": "playback.json"
+  },
+  "generated_at": "2026-06-29T20:06:04.080214+00:00",
+  "git_sha": "7020ceea7d087b1312e8d16efac246954ea4dd54",
+  "method_registry": [
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-EKF-ParamID",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-EquationError-LS",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Fisher-UQ",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Frequency-Stitching",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Frequency-Welch",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-GP-RBF",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "6DOF grey-box OEM method using the framework-owned Sport Cub model specification.",
+      "entry_point": "models.aircraft6dof.greybox:main",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-GreyBoxOEM-EEMInit",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "sportcub_mocap_4_17_26"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Koopman-EDMD",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-LinearSS",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Model-Stitching",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-NN-Surrogate",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": true,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-NominalGreyBox",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-PINN-Closure",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": true,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-RidgeResidual",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-SINDy",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Subspace-Hankel",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Symbolic-Stepwise",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": true,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-UDE-Residual",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": true,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Built-in 6DOF baseline dispatched by models/aircraft6dof/comparison_suite.py.",
+      "entry_point": "models.aircraft6dof.comparison_suite:builtin",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "6DOF-Variational-Mocap",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_open_loop",
+        "aircraft_6dof_sine_sweep",
+        "aircraft_6dof_aggressive",
+        "aircraft_6dof_trim_grid"
+      ]
+    },
+    {
+      "description": "Minimal contributor example for the benchmark plugin API.",
+      "entry_point": "method:ExampleLinearMethod",
+      "heavy": false,
+      "model_families": [
+        "aircraft6dof"
+      ],
+      "name": "ExampleLinear",
+      "observation_types": [
+        "mocap"
+      ],
+      "requires_gpu": false,
+      "training_scenarios": [
+        "aircraft_6dof_trim_grid"
+      ]
+    }
+  ],
+  "metric_definitions": {
+    "rollout_elapsed_s": "Wall-clock validation prediction time after training is complete.",
+    "train_elapsed_s": "Wall-clock fit time for the method on its assigned training dataset.",
+    "validation_score": "Mean state NRMSE over open-loop validation rollouts; lower is better."
+  },
+  "model_families": [
+    "aircraft6dof"
+  ],
+  "scenarios": [
+    {
+      "id": "aircraft_6dof_open_loop",
+      "method_result_count": 16,
+      "model_family": "aircraft6dof",
+      "title": "6-DOF open-loop maneuver"
+    },
+    {
+      "id": "aircraft_6dof_sine_sweep",
+      "method_result_count": 16,
+      "model_family": "aircraft6dof",
+      "title": "6-DOF sine-sweep maneuver"
+    },
+    {
+      "id": "aircraft_6dof_aggressive",
+      "method_result_count": 16,
+      "model_family": "aircraft6dof",
+      "title": "6-DOF aggressive nonlinear stall maneuver"
+    },
+    {
+      "id": "aircraft_6dof_trim_grid",
+      "method_result_count": 16,
+      "model_family": "aircraft6dof",
+      "title": "6-DOF local trim-grid small-deviation maneuver"
+    },
+    {
+      "dataset_status": "provisional",
+      "id": "sportcub_mocap_4_17_26",
+      "method_result_count": 19,
+      "model_family": "aircraft6dof",
+      "source_type": "real_mocap",
+      "title": "Sport Cub S 2 motion-capture 6DOF dataset, 2026-04-17"
+    },
+    {
+      "dataset_status": "provisional",
+      "id": "sportcub_mocap_5_22_26",
+      "method_result_count": 19,
+      "model_family": "aircraft6dof",
+      "source_type": "real_mocap",
+      "title": "Sport Cub S 2 motion-capture full-lap 6DOF dataset, 2026-05-22"
+    },
+    {
+      "dataset_status": "provisional",
+      "id": "sportcub_mocap_6_26_26",
+      "method_result_count": 0,
+      "model_family": "aircraft6dof",
+      "source_type": "real_mocap",
+      "title": "Sport Cub S 2 motion-capture full-lap 6DOF dataset, 2026-06-26"
+    }
+  ],
+  "schema_version": "0.1.0"
+}
