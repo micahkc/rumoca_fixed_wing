@@ -772,6 +772,13 @@ button:hover {
   color: var(--ink);
 }
 
+.autopilot-speed-readout {
+  margin-left: auto;
+  color: #33d17a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .autopilot-status-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(180px, 260px);

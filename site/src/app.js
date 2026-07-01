@@ -75,6 +75,9 @@ const state = {
     elapsedS: 0,
     lapStartS: 0,
     lapTimes: [],
+    effectiveSpeed: 0,
+    speedSampleSimS: 0,
+    speedSampleWallS: 0,
     controlAccumulator: 0,
     lastStick: [0.7, 0, 0, 0],
     waypoints: [
@@ -1680,6 +1683,7 @@ function renderFlightSimControls() {
   if (autopilotDownload) autopilotDownload.disabled = !state.simLog.length;
   renderSimLog();
   renderLapTimes();
+  renderAutopilotSpeedReadout();
   renderAutopilotStartOverlay();
   updateModelicaBusy(document.querySelector("#modelica-flight-status")?.textContent || "");
 }
@@ -2207,6 +2211,9 @@ function resetAutopilotSim() {
   state.autopilot.elapsedS = 0;
   state.autopilot.lapStartS = 0;
   state.autopilot.lapTimes = [];
+  state.autopilot.effectiveSpeed = 0;
+  state.autopilot.speedSampleSimS = 0;
+  state.autopilot.speedSampleWallS = 0;
   state.autopilot.controlAccumulator = 0;
   state.playbackPlaying = false;
   state.playbackLastMs = null;
@@ -2328,6 +2335,9 @@ async function startAutopilotSim() {
     state.autopilot.elapsedS = 0;
     state.autopilot.lapStartS = 0;
     state.autopilot.lapTimes = [];
+    state.autopilot.effectiveSpeed = 0;
+    state.autopilot.speedSampleSimS = 0;
+    state.autopilot.speedSampleWallS = 0;
     state.autopilot.controlAccumulator = 0;
     state.autopilot.lockstepTicks = 0;
     state.flightSim.safeEnabled = true;
@@ -2352,14 +2362,26 @@ function autopilotReadout(message) {
   renderLapTimes();
 }
 
+function renderAutopilotSpeedReadout() {
+  const node = document.querySelector("#autopilot-speed-readout");
+  if (!node) return;
+  if (state.autopilot.active) {
+    node.textContent = `Speed ${(state.autopilot.effectiveSpeed || 0).toFixed(2)}x realtime`;
+  } else if (state.autopilot.starting || state.flightSim.pending) {
+    node.textContent = "Speed compiling";
+  } else {
+    node.textContent = "Speed --";
+  }
+}
+
 function renderLapTimes() {
   const list = document.querySelector("#lap-time-list");
   const summary = document.querySelector("#lap-time-summary");
   if (!list || !summary) return;
   const laps = state.autopilot.lapTimes || [];
   summary.textContent = laps.length
-    ? `${laps.length} lap${laps.length === 1 ? "" : "s"}`
-    : "No laps yet";
+    ? `${laps.length} sim lap${laps.length === 1 ? "" : "s"}`
+    : "No sim laps yet";
   list.replaceChildren();
   for (const lap of laps.slice().reverse()) {
     const item = document.createElement("li");
@@ -2368,7 +2390,7 @@ function renderLapTimes() {
     const duration = document.createElement("span");
     duration.textContent = formatLapTime(lap.durationS);
     const total = document.createElement("span");
-    total.textContent = `total ${formatLapTime(lap.totalS)}`;
+    total.textContent = `sim ${formatLapTime(lap.totalS)}`;
     item.append(number, duration, total);
     list.append(item);
   }
@@ -2379,6 +2401,19 @@ function formatLapTime(seconds) {
   const minutes = Math.floor(Math.max(0, seconds) / 60);
   const remainder = Math.max(0, seconds) - minutes * 60;
   return `${minutes}:${remainder.toFixed(1).padStart(4, "0")}`;
+}
+
+function updateAutopilotEffectiveSpeed(simAdvancedS, wallDeltaS) {
+  state.autopilot.speedSampleSimS += Math.max(0, simAdvancedS || 0);
+  state.autopilot.speedSampleWallS += Math.max(0, wallDeltaS || 0);
+  if (state.autopilot.speedSampleWallS >= 0.25) {
+    const instant = state.autopilot.speedSampleSimS / Math.max(state.autopilot.speedSampleWallS, 1e-6);
+    const previous = Number.isFinite(state.autopilot.effectiveSpeed) ? state.autopilot.effectiveSpeed : instant;
+    state.autopilot.effectiveSpeed = previous * 0.65 + instant * 0.35;
+    state.autopilot.speedSampleSimS = 0;
+    state.autopilot.speedSampleWallS = 0;
+    renderAutopilotSpeedReadout();
+  }
 }
 
 function updateAutopilotLapTimes(nextWaypointIndex) {
@@ -2393,7 +2428,7 @@ function updateAutopilotLapTimes(nextWaypointIndex) {
       const lap = { index: state.autopilot.lapTimes.length + 1, durationS, totalS };
       state.autopilot.lapTimes.push(lap);
       state.autopilot.lapStartS = totalS;
-      appendSimLog(`Autopilot lap ${lap.index}: ${formatLapTime(durationS)} elapsed, ${formatLapTime(totalS)} total.`, "lap", lap);
+      appendSimLog(`Autopilot sim lap ${lap.index}: ${formatLapTime(durationS)} elapsed, ${formatLapTime(totalS)} sim total.`, "lap", lap);
     }
   }
   state.autopilot.previousWaypointIndex = next;
@@ -2707,6 +2742,8 @@ function updateFlightSim(playback, deltaS) {
   const aircraft = ensureFlightAircraft(playback);
   if (!aircraft) return false;
   if (sim.paused) {
+    state.autopilot.effectiveSpeed = 0;
+    renderAutopilotSpeedReadout();
     const pose = flightSimPose(sim.x);
     aircraft.visible = true;
     aircraft.position.copy(pose.position);
@@ -2730,6 +2767,7 @@ function updateFlightSim(playback, deltaS) {
     stick = updateFlightInputs(deltaS);
   }
   let substeps = 0;
+  let autopilotSimAdvancedS = 0;
   const stepStartMs = performance.now();
   if (autopilotMode) {
     const controlDt = state.autopilot.runner.dt || (1 / state.autopilot.updateHz);
@@ -2750,6 +2788,7 @@ function updateFlightSim(playback, deltaS) {
         state.autopilot.elapsedS += controlDt;
         state.autopilot.lockstepTicks += 1;
         sim.elapsedS += controlDt;
+        autopilotSimAdvancedS += controlDt;
         const nextWaypointIndex = Math.max(0, (control.telemetry?.waypoint || 1) - 1);
         updateAutopilotLapTimes(nextWaypointIndex);
         state.autopilot.waypointIndex = nextWaypointIndex;
@@ -2770,7 +2809,7 @@ function updateFlightSim(playback, deltaS) {
             },
           );
         }
-        autopilotReadout(`Target WP ${control.telemetry?.waypoint || 1}/${state.autopilot.waypoints.length} | ${formatNumber(waypointDistanceM)} m | ${state.autopilot.updateHz.toFixed(0)} Hz | sim ${state.autopilot.elapsedS.toFixed(1)} s`);
+        autopilotReadout(`Target WP ${control.telemetry?.waypoint || 1}/${state.autopilot.waypoints.length} | ${formatNumber(waypointDistanceM)} m | ${state.autopilot.updateHz.toFixed(0)} Hz target | sim ${state.autopilot.elapsedS.toFixed(1)} s`);
       } catch (error) {
         console.error(error);
         state.autopilot.lastError = error?.message || String(error || "Autopilot lockstep failed");
@@ -2782,6 +2821,7 @@ function updateFlightSim(playback, deltaS) {
       state.autopilot.controlAccumulator -= controlDt;
       substeps += 1;
     }
+    updateAutopilotEffectiveSpeed(autopilotSimAdvancedS, deltaS);
     if (substeps >= AUTOPILOT_MAX_SUBSTEPS || performance.now() - stepStartMs > FLIGHT_STEP_BUDGET_MS) {
       state.autopilot.controlAccumulator = 0;
     }

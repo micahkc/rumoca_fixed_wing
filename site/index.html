@@ -129,6 +129,7 @@
             <div class="sim-mode-copy">
               <b>Autopilot</b>
               <span>Compiled Modelica lockstep controller over the PURT circuit.</span>
+              <span id="autopilot-speed-readout" class="autopilot-speed-readout">Speed --</span>
             </div>
             <div class="autopilot-rate-controls" aria-label="Autopilot update rate">
               <button type="button" data-autopilot-rate="20">20 Hz</button>
@@ -139,10 +140,10 @@
             </div>
             <div class="autopilot-status-grid">
               <div id="waypoint-readout" class="waypoint-readout"></div>
-              <aside class="lap-time-panel" aria-label="Autopilot lap times">
+              <aside class="lap-time-panel" aria-label="Autopilot sim lap times">
                 <div class="lap-time-heading">
-                  <strong>Lap times</strong>
-                  <span id="lap-time-summary">No laps yet</span>
+                  <strong>Sim lap times</strong>
+                  <span id="lap-time-summary">No sim laps yet</span>
                 </div>
                 <ol id="lap-time-list" class="lap-time-list"></ol>
               </aside>
