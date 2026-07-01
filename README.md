@@ -16,6 +16,15 @@ This repo is focused on the browser GUI for comparing measured Sport Cub flight 
 - `results/sportCubHandTuned.mo`: hand-tuned reference plant source.
 - `data/`: compact Sport Cub NPZ files retained for measured-data comparison/regeneration work.
 
+
+## GitHub Pages
+
+The workbench deploys from `site/` with GitHub Actions. In the GitHub repo settings, set Pages to **GitHub Actions** as the source. After the workflow runs, the site is available at:
+
+```text
+https://micahkc.github.io/rumoca_fixed_wing/
+```
+
 ## Run The GUI
 
 ```bash
