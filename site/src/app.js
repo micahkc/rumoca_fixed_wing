@@ -71,7 +71,10 @@ const state = {
     lockstepTicks: 0,
     lastError: "",
     waypointIndex: 0,
-    previousWaypointIndex: 0,
+    waypoint: 1,
+    waypointCount: 5,
+    targetEnu: null,
+    previousWaypoint: 1,
     elapsedS: 0,
     lapStartS: 0,
     lapTimes: [],
@@ -2207,7 +2210,10 @@ function resetAutopilotSim() {
   state.autopilot.lastError = "";
   state.autopilot.lockstepTicks = 0;
   state.autopilot.waypointIndex = 0;
-  state.autopilot.previousWaypointIndex = 0;
+  state.autopilot.waypoint = 1;
+  state.autopilot.waypointCount = state.autopilot.waypoints.length;
+  state.autopilot.targetEnu = state.autopilot.waypoints[0]?.slice() || null;
+  state.autopilot.previousWaypoint = 1;
   state.autopilot.elapsedS = 0;
   state.autopilot.lapStartS = 0;
   state.autopilot.lapTimes = [];
@@ -2331,7 +2337,10 @@ async function startAutopilotSim() {
     }
     state.autopilot.active = true;
     state.autopilot.waypointIndex = 0;
-    state.autopilot.previousWaypointIndex = 0;
+    state.autopilot.waypoint = 1;
+    state.autopilot.waypointCount = state.autopilot.waypoints.length;
+    state.autopilot.targetEnu = state.autopilot.waypoints[0]?.slice() || null;
+    state.autopilot.previousWaypoint = 1;
     state.autopilot.elapsedS = 0;
     state.autopilot.lapStartS = 0;
     state.autopilot.lapTimes = [];
@@ -2416,12 +2425,11 @@ function updateAutopilotEffectiveSpeed(simAdvancedS, wallDeltaS) {
   }
 }
 
-function updateAutopilotLapTimes(nextWaypointIndex) {
-  const waypointCount = state.autopilot.waypoints.length;
-  if (!waypointCount) return;
-  const prev = clamp(Math.floor(state.autopilot.previousWaypointIndex || 0), 0, waypointCount - 1);
-  const next = clamp(Math.floor(nextWaypointIndex || 0), 0, waypointCount - 1);
-  if (state.autopilot.lockstepTicks > 1 && next < prev && prev >= waypointCount - 2) {
+function updateAutopilotLapTimes(nextWaypoint, waypointCount) {
+  const count = Math.max(1, Math.round(waypointCount || state.autopilot.waypointCount || state.autopilot.waypoints.length));
+  const prev = clamp(Math.round(state.autopilot.previousWaypoint || 1), 1, count);
+  const next = clamp(Math.round(nextWaypoint || 1), 1, count);
+  if (state.autopilot.lockstepTicks > 1 && next < prev && prev >= count - 1) {
     const totalS = state.autopilot.elapsedS;
     const durationS = totalS - (state.autopilot.lapStartS || 0);
     if (durationS > 1) {
@@ -2431,7 +2439,7 @@ function updateAutopilotLapTimes(nextWaypointIndex) {
       appendSimLog(`Autopilot sim lap ${lap.index}: ${formatLapTime(durationS)} elapsed, ${formatLapTime(totalS)} sim total.`, "lap", lap);
     }
   }
-  state.autopilot.previousWaypointIndex = next;
+  state.autopilot.previousWaypoint = next;
 }
 
 function interpolatePredictionState(predictionFlight, timeS) {
@@ -2697,19 +2705,28 @@ function ensureWaypointVisuals(playback) {
 function updateWaypointTargetVisuals(playback, aircraftPosition = null) {
   if (!playback?.waypointGroup) return;
   const group = playback.waypointGroup;
-  const targetIndex = clamp(Math.floor(state.autopilot.waypointIndex || 0), 0, state.autopilot.waypoints.length - 1);
+  const targetEnu = currentAutopilotTargetEnu();
+  const fallbackIndex = clamp(Math.floor(state.autopilot.waypointIndex || 0), 0, state.autopilot.waypoints.length - 1);
   for (const sphere of group.userData.waypointSpheres || []) {
-    const active = sphere.userData.index === targetIndex;
+    const waypoint = state.autopilot.waypoints[sphere.userData.index];
+    const coordinateMatch = targetEnu && waypoint && Math.hypot(waypoint[0] - targetEnu[0], waypoint[1] - targetEnu[1], waypoint[2] - targetEnu[2]) < 1e-3;
+    const active = coordinateMatch || (!targetEnu && sphere.userData.index === fallbackIndex);
     sphere.material = active ? sphere.userData.targetMaterial : sphere.userData.normalMaterial;
     sphere.scale.setScalar(active ? 2.2 : 1);
   }
   const targetLine = group.userData.targetLine;
   if (!targetLine) return;
-  targetLine.visible = Boolean(aircraftPosition) && state.playbackView === "autopilot";
+  targetLine.visible = Boolean(aircraftPosition && targetEnu) && state.playbackView === "autopilot";
   if (!targetLine.visible) return;
-  const targetPosition = enuToThree(state.autopilot.waypoints[targetIndex]);
+  const targetPosition = enuToThree(targetEnu);
   targetLine.geometry.dispose();
   targetLine.geometry = new THREE.BufferGeometry().setFromPoints([aircraftPosition.clone(), targetPosition]);
+}
+
+function currentAutopilotTargetEnu() {
+  if (Array.isArray(state.autopilot.targetEnu) && state.autopilot.targetEnu.every(Number.isFinite)) return state.autopilot.targetEnu;
+  const fallbackIndex = clamp(Math.floor(state.autopilot.waypointIndex || 0), 0, state.autopilot.waypoints.length - 1);
+  return state.autopilot.waypoints[fallbackIndex] || null;
 }
 
 function appendFlightTrail(playback, position) {
@@ -2730,7 +2747,7 @@ function appendFlightTrail(playback, position) {
 }
 
 function targetWaypointDistanceM(x) {
-  const waypoint = state.autopilot.waypoints[clamp(Math.floor(state.autopilot.waypointIndex || 0), 0, state.autopilot.waypoints.length - 1)];
+  const waypoint = currentAutopilotTargetEnu();
   if (!waypoint || !x) return NaN;
   const position = x.positionEnu || x.slice(0, 3);
   return Math.hypot(position[0] - waypoint[0], position[1] - waypoint[1], position[2] - waypoint[2]);
@@ -2789,27 +2806,35 @@ function updateFlightSim(playback, deltaS) {
         state.autopilot.lockstepTicks += 1;
         sim.elapsedS += controlDt;
         autopilotSimAdvancedS += controlDt;
-        const nextWaypointIndex = Math.max(0, (control.telemetry?.waypoint || 1) - 1);
-        updateAutopilotLapTimes(nextWaypointIndex);
-        state.autopilot.waypointIndex = nextWaypointIndex;
+        const telemetry = control.telemetry || {};
+        const targetWaypoint = Math.max(1, Math.round(telemetry.waypoint || 1));
+        const waypointCount = Math.max(1, Math.round(telemetry.waypointCount || state.autopilot.waypointCount || state.autopilot.waypoints.length));
+        state.autopilot.waypoint = targetWaypoint;
+        state.autopilot.waypointCount = waypointCount;
+        state.autopilot.targetEnu = Array.isArray(telemetry.targetEnu) && telemetry.targetEnu.every(Number.isFinite)
+          ? telemetry.targetEnu.slice()
+          : currentAutopilotTargetEnu();
+        state.autopilot.waypointIndex = targetWaypoint - 1;
+        updateAutopilotLapTimes(targetWaypoint, waypointCount);
         const waypointDistanceM = targetWaypointDistanceM(sim.x);
         if (state.autopilot.lockstepTicks % Math.max(1, Math.round(state.autopilot.updateHz)) === 0) {
-          const targetWaypoint = state.autopilot.waypoints[state.autopilot.waypointIndex] || null;
+          const targetEnuM = currentAutopilotTargetEnu();
           appendSimLog(
-            `Autopilot tick ${state.autopilot.lockstepTicks}: target waypoint ${control.telemetry?.waypoint || 1}, distance ${formatNumber(waypointDistanceM)} m, sim ${state.autopilot.elapsedS.toFixed(1)} s.`,
+            `Autopilot tick ${state.autopilot.lockstepTicks}: target waypoint ${state.autopilot.waypoint}, distance ${formatNumber(waypointDistanceM)} m, sim ${state.autopilot.elapsedS.toFixed(1)} s.`,
             "step",
             {
-              waypoint: control.telemetry?.waypoint || 1,
-              targetEnuM: targetWaypoint,
+              waypoint: state.autopilot.waypoint,
+              waypointCount: state.autopilot.waypointCount,
+              targetEnuM,
               aircraftEnuM: sim.x.positionEnu || sim.x.slice(0, 3),
               aircraftNedState: sim.x.rawNed || null,
               stick: stick.slice(),
               plantStick,
-              telemetry: control.telemetry || null,
+              telemetry,
             },
           );
         }
-        autopilotReadout(`Target WP ${control.telemetry?.waypoint || 1}/${state.autopilot.waypoints.length} | ${formatNumber(waypointDistanceM)} m | ${state.autopilot.updateHz.toFixed(0)} Hz target | sim ${state.autopilot.elapsedS.toFixed(1)} s`);
+        autopilotReadout(`Target WP ${state.autopilot.waypoint}/${state.autopilot.waypointCount} | ${formatNumber(waypointDistanceM)} m | ${state.autopilot.updateHz.toFixed(0)} Hz target | sim ${state.autopilot.elapsedS.toFixed(1)} s`);
       } catch (error) {
         console.error(error);
         state.autopilot.lastError = error?.message || String(error || "Autopilot lockstep failed");

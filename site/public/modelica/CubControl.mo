@@ -131,6 +131,10 @@ package CubControl
     discrete output Real stabilizer(start = 2000.0);
     discrete output Boolean airborne(start = false);
     discrete output Integer current_wp(start = 1);
+    discrete output Integer waypoint_count(start = nWaypoints);
+    discrete output Real target_x(start = waypoints[1, 1]);
+    discrete output Real target_y(start = waypoints[1, 2]);
+    discrete output Real target_z(start = waypoints[1, 3]);
     discrete output Real des_v(start = 0.0);
     discrete output Real des_gamma(start = 0.0);
     discrete output Real des_heading(start = 0.0);
@@ -355,6 +359,10 @@ package CubControl
         end if;
       end if;
 
+      waypoint_count := nWaypoints;
+      target_x := waypoints[current_wp, 1];
+      target_y := waypoints[current_wp, 2];
+      target_z := waypoints[current_wp, 3];
       stabilizer := stabilizerCmd;
 
       // history for next sample's finite differences (node end-of-cycle)

@@ -554,6 +554,10 @@ export async function createModelicaAutopilotRunner(source, options = {}) {
     const value = stepper.get(name);
     return Number.isFinite(value) ? value : fallback;
   };
+  const getOptional = (name) => {
+    const value = stepper.get(name);
+    return Number.isFinite(value) ? value : null;
+  };
   const outputStick = () => [
     clamp(get("throttle", 0.7), 0, 1),
     clamp(get("elevator", 0), -1, 1),
@@ -581,10 +585,16 @@ export async function createModelicaAutopilotRunner(source, options = {}) {
       set("yaw", eulerEnu.yaw);
       set("yaw_enu", eulerEnu.yaw);
       stepper.step(dt);
+      const targetX = getOptional("target_x");
+      const targetY = getOptional("target_y");
+      const targetZ = getOptional("target_z");
+      const targetEnu = [targetX, targetY, targetZ].every(Number.isFinite) ? [targetX, targetY, targetZ] : null;
       return {
         stick: outputStick(),
         telemetry: {
-          waypoint: Math.round(get("current_wp", 1)),
+          waypoint: Math.max(1, Math.round(get("current_wp", 1))),
+          waypointCount: Math.max(1, Math.round(get("waypoint_count", get("current_wp", 1)))),
+          targetEnu,
           desiredSpeed: get("des_v", 0),
           desiredHeading: get("des_heading", 0),
           headingError: get("chi_err", 0),
