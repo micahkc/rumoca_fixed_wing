@@ -1,5 +1,7 @@
 # rumoca_fixed_wing
 
+Website: [https://micahkc.github.io/rumoca_fixed_wing/](https://micahkc.github.io/rumoca_fixed_wing/)
+
 Minimal Rumoca fixed-wing Modelica workbench.
 
 This repo is focused on the browser GUI for comparing measured Sport Cub flight data against editable Modelica models, flying the fixed-wing model with keyboard input, and running a lockstep Modelica waypoint autopilot through Rumoca WASM.

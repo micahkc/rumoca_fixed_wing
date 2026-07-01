@@ -137,7 +137,16 @@
               <button type="button" id="autopilot-pause">Pause</button>
               <button type="button" id="autopilot-download-log">Download log</button>
             </div>
-            <div id="waypoint-readout" class="waypoint-readout"></div>
+            <div class="autopilot-status-grid">
+              <div id="waypoint-readout" class="waypoint-readout"></div>
+              <aside class="lap-time-panel" aria-label="Autopilot lap times">
+                <div class="lap-time-heading">
+                  <strong>Lap times</strong>
+                  <span id="lap-time-summary">No laps yet</span>
+                </div>
+                <ol id="lap-time-list" class="lap-time-list"></ol>
+              </aside>
+            </div>
           </div>
         </div>
       </section>

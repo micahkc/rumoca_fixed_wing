@@ -71,7 +71,10 @@ const state = {
     lockstepTicks: 0,
     lastError: "",
     waypointIndex: 0,
+    previousWaypointIndex: 0,
     elapsedS: 0,
+    lapStartS: 0,
+    lapTimes: [],
     controlAccumulator: 0,
     lastStick: [0.7, 0, 0, 0],
     waypoints: [
@@ -1676,6 +1679,7 @@ function renderFlightSimControls() {
   }
   if (autopilotDownload) autopilotDownload.disabled = !state.simLog.length;
   renderSimLog();
+  renderLapTimes();
   renderAutopilotStartOverlay();
   updateModelicaBusy(document.querySelector("#modelica-flight-status")?.textContent || "");
 }
@@ -2199,7 +2203,10 @@ function resetAutopilotSim() {
   state.autopilot.lastError = "";
   state.autopilot.lockstepTicks = 0;
   state.autopilot.waypointIndex = 0;
+  state.autopilot.previousWaypointIndex = 0;
   state.autopilot.elapsedS = 0;
+  state.autopilot.lapStartS = 0;
+  state.autopilot.lapTimes = [];
   state.autopilot.controlAccumulator = 0;
   state.playbackPlaying = false;
   state.playbackLastMs = null;
@@ -2317,7 +2324,10 @@ async function startAutopilotSim() {
     }
     state.autopilot.active = true;
     state.autopilot.waypointIndex = 0;
+    state.autopilot.previousWaypointIndex = 0;
     state.autopilot.elapsedS = 0;
+    state.autopilot.lapStartS = 0;
+    state.autopilot.lapTimes = [];
     state.autopilot.controlAccumulator = 0;
     state.autopilot.lockstepTicks = 0;
     state.flightSim.safeEnabled = true;
@@ -2339,6 +2349,54 @@ async function startAutopilotSim() {
 function autopilotReadout(message) {
   const node = document.querySelector("#waypoint-readout");
   if (node) node.textContent = message || "";
+  renderLapTimes();
+}
+
+function renderLapTimes() {
+  const list = document.querySelector("#lap-time-list");
+  const summary = document.querySelector("#lap-time-summary");
+  if (!list || !summary) return;
+  const laps = state.autopilot.lapTimes || [];
+  summary.textContent = laps.length
+    ? `${laps.length} lap${laps.length === 1 ? "" : "s"}`
+    : "No laps yet";
+  list.replaceChildren();
+  for (const lap of laps.slice().reverse()) {
+    const item = document.createElement("li");
+    const number = document.createElement("b");
+    number.textContent = `Lap ${lap.index}`;
+    const duration = document.createElement("span");
+    duration.textContent = formatLapTime(lap.durationS);
+    const total = document.createElement("span");
+    total.textContent = `total ${formatLapTime(lap.totalS)}`;
+    item.append(number, duration, total);
+    list.append(item);
+  }
+}
+
+function formatLapTime(seconds) {
+  if (!Number.isFinite(seconds)) return "--";
+  const minutes = Math.floor(Math.max(0, seconds) / 60);
+  const remainder = Math.max(0, seconds) - minutes * 60;
+  return `${minutes}:${remainder.toFixed(1).padStart(4, "0")}`;
+}
+
+function updateAutopilotLapTimes(nextWaypointIndex) {
+  const waypointCount = state.autopilot.waypoints.length;
+  if (!waypointCount) return;
+  const prev = clamp(Math.floor(state.autopilot.previousWaypointIndex || 0), 0, waypointCount - 1);
+  const next = clamp(Math.floor(nextWaypointIndex || 0), 0, waypointCount - 1);
+  if (state.autopilot.lockstepTicks > 1 && next < prev && prev >= waypointCount - 2) {
+    const totalS = state.autopilot.elapsedS;
+    const durationS = totalS - (state.autopilot.lapStartS || 0);
+    if (durationS > 1) {
+      const lap = { index: state.autopilot.lapTimes.length + 1, durationS, totalS };
+      state.autopilot.lapTimes.push(lap);
+      state.autopilot.lapStartS = totalS;
+      appendSimLog(`Autopilot lap ${lap.index}: ${formatLapTime(durationS)} elapsed, ${formatLapTime(totalS)} total.`, "lap", lap);
+    }
+  }
+  state.autopilot.previousWaypointIndex = next;
 }
 
 function interpolatePredictionState(predictionFlight, timeS) {
@@ -2692,7 +2750,9 @@ function updateFlightSim(playback, deltaS) {
         state.autopilot.elapsedS += controlDt;
         state.autopilot.lockstepTicks += 1;
         sim.elapsedS += controlDt;
-        state.autopilot.waypointIndex = Math.max(0, (control.telemetry?.waypoint || 1) - 1);
+        const nextWaypointIndex = Math.max(0, (control.telemetry?.waypoint || 1) - 1);
+        updateAutopilotLapTimes(nextWaypointIndex);
+        state.autopilot.waypointIndex = nextWaypointIndex;
         const waypointDistanceM = targetWaypointDistanceM(sim.x);
         if (state.autopilot.lockstepTicks % Math.max(1, Math.round(state.autopilot.updateHz)) === 0) {
           const targetWaypoint = state.autopilot.waypoints[state.autopilot.waypointIndex] || null;
