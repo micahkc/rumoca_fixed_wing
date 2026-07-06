@@ -1691,7 +1691,7 @@ function renderFlightSimControls() {
   updateModelicaBusy(document.querySelector("#modelica-flight-status")?.textContent || "");
 }
 
-async function startFlightSim({ keepInputLog = false, preserveControls = false, sourceOverride = null, persistSource = true } = {}) {
+async function startFlightSim({ keepInputLog = false, preserveControls = false, sourceOverride = null, persistSource = true, statusPrefix = "" } = {}) {
   const entry = selectedFlightModelicaEntry();
   if (!entry || state.flightSim.pending) return;
   if (state.playbackView !== "autopilot") state.autopilot.active = false;
@@ -1711,7 +1711,7 @@ async function startFlightSim({ keepInputLog = false, preserveControls = false, 
   state.flightSim.pending = true;
   state.flightSim.active = false;
   state.flightSim.paused = false;
-  setFlightStatus(`Compiling ${entry.modelName}...`);
+  setFlightStatus(`${statusPrefix}Compiling ${entry.modelName}...`);
   renderFlightSimControls();
   await uiYield();
   let diagnostics = [];
@@ -1725,7 +1725,9 @@ async function startFlightSim({ keepInputLog = false, preserveControls = false, 
       setFlightStatus(message, true);
       throw new Error(message);
     }
+    const compileStartMs = performance.now();
     const runner = await createModelicaFlightRunner(entry, source);
+    const compileMs = performance.now() - compileStartMs;
     state.flightSim.runner = runner;
     state.flightSim.active = true;
     state.flightSim.paused = false;
@@ -1752,7 +1754,7 @@ async function startFlightSim({ keepInputLog = false, preserveControls = false, 
     }
     if (!keepInputLog) state.flightSim.inputLog = [];
     const safeText = runner.supportsSafeToggle ? "Space toggles SAFE" : "SAFE toggle unavailable";
-    setFlightStatus(`${entry.modelName} ready. ${safeText}, W/S throttle, arrows pitch/roll, A/D rudder, R reset.`, !runner.supportsSafeToggle);
+    setFlightStatus(`${entry.modelName} ready in ${(compileMs / 1000).toFixed(1)} s. ${safeText}, W/S throttle, arrows pitch/roll, A/D rudder, R reset.`, !runner.supportsSafeToggle);
   } catch (error) {
     console.error(error);
     state.flightSim.active = false;
@@ -2318,9 +2320,14 @@ async function startAutopilotSim() {
       setFlightStatus(message, true);
       return;
     }
+    setFlightStatus(`Compiling CubControl autopilot at ${state.autopilot.updateHz.toFixed(0)} Hz...`);
+    renderFlightSimControls();
+    await uiYield();
+    const autopilotCompileStartMs = performance.now();
     const autopilotRunner = await createModelicaAutopilotRunner(state.autopilot.source, {
       dt: 1 / state.autopilot.updateHz,
     });
+    const autopilotCompileMs = performance.now() - autopilotCompileStartMs;
     state.autopilot.runner = autopilotRunner;
     state.autopilot.lastStick = autopilotRunner.reset();
     state.flightSim.pending = false;
@@ -2330,7 +2337,10 @@ async function startAutopilotSim() {
     const autopilotPlantSource = sourceWithAutopilotStart(plantSource, AUTOPILOT_START_ALTITUDE_M);
     setPlaybackCameraMode("chase");
     configureFlightPracticeScene();
-    await startFlightSim({ keepInputLog: true, sourceOverride: autopilotPlantSource, persistSource: false });
+    setFlightStatus(`CubControl ready in ${(autopilotCompileMs / 1000).toFixed(1)} s. Compiling fixed-wing plant...`);
+    renderFlightSimControls();
+    await uiYield();
+    await startFlightSim({ keepInputLog: true, sourceOverride: autopilotPlantSource, persistSource: false, statusPrefix: "Autopilot: " });
     if (!state.flightSim.runner || !state.flightSim.active) {
       state.autopilot.lastError = "Fixed-wing plant did not start";
       return;
