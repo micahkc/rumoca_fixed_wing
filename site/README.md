@@ -5,6 +5,9 @@ Static browser UI for measured-data playback/comparison, editable Modelica fixed
 ## Serve Locally
 
 ```bash
+cd site
+npm ci
+cd ..
 ./results.py serve-site
 ```
 
@@ -22,4 +25,5 @@ Static browser UI for measured-data playback/comparison, editable Modelica fixed
 - `src/modelica_prediction_worker.js`: background prediction worker.
 - `public/data/`: measured playback/comparison payloads.
 - `public/modelica/CubControl.mo`: default Modelica autopilot.
-- `public/wasm/`: local Rumoca browser bundle.
+- `package.json`: pinned browser dependencies.
+- `public/vendor/rumoca/`: generated Rumoca browser files copied from `@cognipilot/rumoca`.

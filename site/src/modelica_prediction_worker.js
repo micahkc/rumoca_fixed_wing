@@ -1,4 +1,4 @@
-import initRumoca, * as rumoca from "../public/wasm/rumoca_bind_wasm.js";
+import initRumoca, * as rumoca from "../public/vendor/rumoca/rumoca_bind_wasm.js";
 
 let rumocaReady = null;
 

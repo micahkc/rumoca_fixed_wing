@@ -26,3 +26,6 @@ __pycache__/
 
 # Static-site npm dependencies are installed locally from pinned package files.
 /site/node_modules/
+
+# Generated from the pinned @cognipilot/rumoca npm package by results.py.
+/site/public/vendor/

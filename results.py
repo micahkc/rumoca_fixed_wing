@@ -8,6 +8,7 @@ import http.server
 import importlib.util
 import json
 import re
+import shutil
 import socketserver
 from pathlib import Path
 
@@ -15,6 +16,18 @@ ROOT = Path(__file__).resolve().parent
 SITE = ROOT / "site"
 DEFAULT_MODEL = ROOT / "results" / "FixedWingPlantGA.mo"
 BUNDLE = SITE / "src" / "fixedwing_ga_model.js"
+RUMOCA_PACKAGE = SITE / "node_modules" / "@cognipilot" / "rumoca"
+RUMOCA_VENDOR = SITE / "public" / "vendor" / "rumoca"
+RUMOCA_BROWSER_FILES = [
+    "modelica_language.js",
+    "parse_worker.js",
+    "rumoca_bind_wasm.js",
+    "rumoca_bind_wasm_bg.wasm",
+    "rumoca_interactive.js",
+    "rumoca_package_meta.json",
+    "rumoca_runtime.js",
+    "rumoca_worker.js",
+]
 
 
 def js_string(value: str) -> str:
@@ -43,13 +56,35 @@ def publish_model(args: argparse.Namespace) -> None:
     print(f"published {model} as {model_name} -> {BUNDLE.relative_to(ROOT)}")
 
 
+def vendor_rumoca(_args: argparse.Namespace | None = None) -> None:
+    if not RUMOCA_PACKAGE.exists():
+        raise SystemExit("missing site/node_modules/@cognipilot/rumoca; run `npm ci` in site/")
+
+    missing = [name for name in RUMOCA_BROWSER_FILES if not (RUMOCA_PACKAGE / name).exists()]
+    if missing:
+        raise SystemExit(f"Rumoca npm package is missing browser files: {', '.join(missing)}")
+
+    if RUMOCA_VENDOR.exists():
+        shutil.rmtree(RUMOCA_VENDOR)
+    RUMOCA_VENDOR.mkdir(parents=True)
+    for name in RUMOCA_BROWSER_FILES:
+        shutil.copy2(RUMOCA_PACKAGE / name, RUMOCA_VENDOR / name)
+
+    package_meta = json.loads((RUMOCA_PACKAGE / "package.json").read_text())
+    version = package_meta.get("version", "unknown")
+    print(f"vendored @cognipilot/rumoca {version} -> {RUMOCA_VENDOR.relative_to(ROOT)}")
+
+
 def check_site(_args: argparse.Namespace) -> None:
+    vendor_rumoca()
     spec = importlib.util.spec_from_file_location("check_site", SITE / "check_site.py")
     if spec is None or spec.loader is None:
         raise SystemExit("could not load site/check_site.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    raise SystemExit(module.main())
+    status = module.main()
+    if status:
+        raise SystemExit(status)
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -81,6 +116,9 @@ def parse_args() -> argparse.Namespace:
 
     p_check = sub.add_parser("check-site", help="validate the static site bundle")
     p_check.set_defaults(func=check_site)
+
+    p_vendor_rumoca = sub.add_parser("vendor-rumoca", help="copy Rumoca browser files from the pinned npm package")
+    p_vendor_rumoca.set_defaults(func=vendor_rumoca)
 
     p_serve = sub.add_parser("serve-site", help="serve the static workbench locally")
     p_serve.add_argument("--port", type=int, default=0, help="port to bind, default chooses a free port")

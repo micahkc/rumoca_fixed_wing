@@ -1,56 +1,80 @@
-Website: [https://micahkc.github.io/rumoca_fixed_wing/](https://micahkc.github.io/rumoca_fixed_wing/)
-
 # rumoca_fixed_wing
 
-Minimal Rumoca fixed-wing Modelica workbench.
+**Live site:** [https://micahkc.github.io/rumoca_fixed_wing/](https://micahkc.github.io/rumoca_fixed_wing/)
 
-This repo is focused on the browser GUI for comparing measured Sport Cub flight data against editable Modelica models, flying the fixed-wing model with keyboard input, and running a lockstep Modelica waypoint autopilot through Rumoca WASM.
+A browser-based fixed-wing Modelica workbench built on [Rumoca](https://github.com/CogniPilot/rumoca) WASM. It lets you:
 
-## What Is Included
+- Compare measured Sport Cub flight data against an editable Modelica flight model, with in-browser prediction.
+- Fly the fixed-wing model interactively with keyboard input.
+- Run a lockstep Modelica waypoint autopilot against the plant model, entirely in the browser.
 
-- `site/`: the static browser workbench.
+Everything runs client-side as a static site — Modelica compilation and simulation happen in WASM, so no backend is required.
+
+## Repository Layout
+
+- `site/`: the static browser workbench (HTML/JS, served as-is).
 - `site/public/data/`: committed playback, flight explorer, method trace, and measured comparison data used by the GUI.
 - `site/public/modelica/CubControl.mo`: editable default waypoint autopilot.
-- `site/public/wasm/`: local Rumoca WASM/LSP bundle used by the browser.
-- `site/src/fixedwing_ga_model.js`: embedded default fixed-wing Modelica model for the browser.
+- `site/package.json`: pinned browser dependencies, including `@cognipilot/rumoca`.
+- `site/public/vendor/rumoca/`: generated Rumoca browser bundle copied from the npm package.
+- `site/src/fixedwing_ga_model.js`: embedded default fixed-wing Modelica model (generated, see below).
 - `site/src/rumoca_flight.js`: browser-side Rumoca model, autopilot, and LSP helpers.
 - `results/FixedWingPlantGA.mo`: current editable fixed-wing plant source.
 - `results/sportCubHandTuned.mo`: hand-tuned reference plant source.
-- `data/`: compact Sport Cub NPZ files retained for measured-data comparison/regeneration work.
+- `data/`: compact Sport Cub flight-data NPZ files used for measured-data comparison.
+- `results.py`: helper CLI for serving, validating, and updating the site.
 
+## Run Locally
 
-## GitHub Pages
+Requires Python 3 and npm. Install the pinned browser dependencies once:
 
-The workbench deploys from `site/` with GitHub Actions. In the GitHub repo settings, set Pages to **GitHub Actions** as the source. After the workflow runs, the site is available at:
-
-```text
-https://micahkc.github.io/rumoca_fixed_wing/
+```bash
+cd site
+npm ci
+cd ..
 ```
-
-## Run The GUI
 
 ```bash
 ./results.py serve-site
 ```
 
-Open the printed local URL. The first tab plays measured aircraft data and can run `Predict here` with the compiled Modelica model. The keyboard tab flies the fixed-wing model directly. The autopilot tab compiles `CubControl.mo` and the fixed-wing plant, then runs them lockstep.
+Open the printed local URL. The workbench has three tabs:
 
-## Validate The Static Bundle
+1. **Flight data** — plays back measured aircraft data; use `Predict here` to run the compiled Modelica model from any point and compare against the measurement.
+2. **Keyboard flight** — flies the fixed-wing model directly with keyboard input.
+3. **Autopilot** — compiles `CubControl.mo` and the fixed-wing plant, then runs them in lockstep through waypoints.
+
+## Validate the Static Bundle
 
 ```bash
 ./results.py check-site
 ```
 
-This checks that the static data bundle and Modelica/Rumoca browser wiring are present.
+Checks that the static data bundle and Modelica/Rumoca browser wiring are present. This also runs automatically before `serve-site`.
 
-## Publish A New Fixed-Wing Model To The Browser
+## Update Rumoca Browser Files
+
+```bash
+cd site
+npm ci
+cd ..
+./results.py vendor-rumoca
+```
+
+The generated `site/public/vendor/rumoca/` directory is copied from the pinned `@cognipilot/rumoca` npm dependency and is not committed.
+
+## Update the Bundled Fixed-Wing Model
 
 ```bash
 ./results.py publish-model results/FixedWingPlantGA.mo
 ```
 
-This updates `site/src/fixedwing_ga_model.js` from a Modelica source file. The browser still compiles edited Modelica in-place, so this is only needed when changing the default bundled model.
+Regenerates `site/src/fixedwing_ga_model.js` from a Modelica source file. The browser compiles edited Modelica in-place at runtime, so this is only needed to change the default model shipped with the site.
 
-## Project Scope
+## Deployment
 
-This is no longer the full `mocap_sysid` benchmark repository. It intentionally does not include the broad method plugin framework, synthetic 6DOF benchmark suite, paper-generation assets, or GA/system-identification training machinery. The repo should stay centered on the GUI, data comparison, Modelica editing, Rumoca WASM execution, keyboard flight, and lockstep autopilot testing.
+The site deploys from `site/` via GitHub Actions to GitHub Pages. In the repo settings, set Pages source to **GitHub Actions**; each push to `main` publishes to the URL above.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE).

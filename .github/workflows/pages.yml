@@ -31,10 +31,15 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install static site dependencies
+        working-directory: site
+        run: npm ci
+
       - name: Validate static site bundle
         run: |
           node --check site/src/app.js
           node --check site/src/rumoca_flight.js
+          node --check site/src/modelica_prediction_worker.js
           ./results.py check-site
 
   deploy:
@@ -46,6 +51,18 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install static site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Vendor Rumoca browser package
+        run: ./results.py vendor-rumoca
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
