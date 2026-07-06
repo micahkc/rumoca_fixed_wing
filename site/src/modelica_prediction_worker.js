@@ -13,6 +13,47 @@ async function loadRumoca() {
   return rumocaReady;
 }
 
+function createRumocaStepper(wasm, source, modelName, options = {}) {
+  if (typeof wasm.WasmStepper === "function") {
+    return new wasm.WasmStepper(source, modelName);
+  }
+  const Session = wasm.WasmSimulationSession;
+  if (typeof Session !== "function") {
+    throw new Error("Rumoca package does not expose WasmStepper or WasmSimulationSession.");
+  }
+  const tEnd = finiteNumber(options.tEnd, 3600);
+  const dt = finiteNumber(options.dt, 1 / 240);
+  const session = typeof Session.withOptions === "function"
+    ? Session.withOptions(source, modelName, tEnd, dt, options.solver || "rk4", 1e-6, 1e-6)
+    : new Session(source, modelName);
+  return {
+    get(name) {
+      return session.get(name);
+    },
+    input_names() {
+      return session.input_names();
+    },
+    reset() {
+      session.reset();
+    },
+    set_input(name, value) {
+      session.set_input(name, value);
+    },
+    time() {
+      return typeof session.time === "function" ? session.time() : 0;
+    },
+    step(dtStep) {
+      if (typeof session.advance_to !== "function") {
+        throw new Error("Rumoca simulation session cannot advance.");
+      }
+      session.advance_to(this.time() + finiteNumber(dtStep));
+    },
+    free() {
+      if (typeof session.free === "function") session.free();
+    },
+  };
+}
+
 function finiteNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -144,7 +185,7 @@ self.onmessage = async (event) => {
     const compileStart = performance.now();
     self.postMessage({ type: "progress", id, phase: "building stepper" });
     const simulationSource = sourceWithInitialState(msg.source || "", msg.initialState);
-    stepper = new wasm.WasmStepper(simulationSource, msg.modelName);
+    stepper = createRumocaStepper(wasm, simulationSource, msg.modelName, { dt: finiteNumber(msg.dt, 1 / 240) });
     const compileMs = performance.now() - compileStart;
     const inputNames = new Set(JSON.parse(stepper.input_names() || "[]"));
     const resetStart = performance.now();
