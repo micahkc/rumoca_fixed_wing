@@ -1,6 +1,6 @@
 # rumoca_fixed_wing
 
-**Live site:** [https://micahkc.github.io/rumoca_fixed_wing/](https://micahkc.github.io/rumoca_fixed_wing/)
+**Live site:** [https://cognipilot.github.io/rumoca_fixed_wing/](https://cognipilot.github.io/rumoca_fixed_wing/)
 
 A browser-based fixed-wing Modelica workbench built on [Rumoca](https://github.com/CogniPilot/rumoca) WASM. It lets you:
 
