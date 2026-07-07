@@ -43,10 +43,15 @@ function createRumocaStepper(wasm, source, modelName, options = {}) {
       return typeof session.time === "function" ? session.time() : 0;
     },
     step(dtStep) {
+      const dt = finiteNumber(dtStep);
+      if (typeof session.step === "function") {
+        session.step(dt);
+        return;
+      }
       if (typeof session.advance_to !== "function") {
         throw new Error("Rumoca simulation session cannot advance.");
       }
-      session.advance_to(this.time() + finiteNumber(dtStep));
+      session.advance_to(this.time() + dt);
     },
     free() {
       if (typeof session.free === "function") session.free();

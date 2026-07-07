@@ -113,93 +113,20 @@ function createRumocaStepper(wasm, source, modelName, options = {}) {
       return typeof session.variable_names === "function" ? session.variable_names() : "[]";
     },
     step(dtStep) {
+      const dt = finiteNumber(dtStep);
+      if (typeof session.step === "function") {
+        session.step(dt);
+        return;
+      }
       if (typeof session.advance_to !== "function") {
         throw new Error("Rumoca simulation session cannot advance.");
       }
-      session.advance_to(this.time() + finiteNumber(dtStep));
+      session.advance_to(this.time() + dt);
     },
     free() {
       if (typeof session.free === "function") session.free();
     },
   };
-}
-
-function sampledAutopilotSource(source) {
-  let out = source.replace(
-    /(model\s+FixedWingOuterLoop[\s\S]*?)(\n\s*algorithm\s*\n)/,
-    "$1\n  algorithm\n    when sample(0, dt) then\n",
-  );
-  out = out.replace(
-    /(\n\s*end\s+FixedWingOuterLoop\s*;)/,
-    "\n    end when;$1",
-  );
-  return out;
-}
-
-function autopilotSessionSource(source, dt) {
-  return `${sampledAutopilotSource(source)}
-
-model RumocaAutopilotSession
-  parameter Real dt = ${finiteNumber(dt, 0.02).toPrecision(12)};
-
-  input Real x;
-  input Real y;
-  input Real z;
-  input Real roll;
-  input Real pitch;
-  input Real yaw;
-
-  output Real aileron;
-  output Real elevator;
-  output Real throttle;
-  output Real rudder;
-  output Real stabilizer;
-  output Real airborne;
-  output Real current_wp;
-  output Real waypoint_count;
-  output Real target_x;
-  output Real target_y;
-  output Real target_z;
-  output Real des_v;
-  output Real des_gamma;
-  output Real des_heading;
-  output Real des_a;
-  output Real phi_cmd;
-  output Real chi_err;
-
-protected
-  Real dummy(start = 0, fixed = true);
-  CubControl.FixedWingOuterLoop controller(dt = dt);
-
-equation
-  der(dummy) = 0;
-
-  controller.x = x;
-  controller.y = y;
-  controller.z = z;
-  controller.roll = roll;
-  controller.pitch = pitch;
-  controller.yaw = yaw;
-
-  aileron = controller.aileron;
-  elevator = controller.elevator;
-  throttle = controller.throttle;
-  rudder = controller.rudder;
-  stabilizer = controller.stabilizer;
-  airborne = if controller.airborne then 1.0 else 0.0;
-  current_wp = controller.current_wp;
-  waypoint_count = controller.waypoint_count;
-  target_x = controller.target_x;
-  target_y = controller.target_y;
-  target_z = controller.target_z;
-  des_v = controller.des_v;
-  des_gamma = controller.des_gamma;
-  des_heading = controller.des_heading;
-  des_a = controller.des_a;
-  phi_cmd = controller.phi_cmd;
-  chi_err = controller.chi_err;
-end RumocaAutopilotSession;
-`;
 }
 
 function read(stepper, names, fallback = 0) {
@@ -670,13 +597,7 @@ export async function createModelicaAutopilotRunner(source, options = {}) {
   const requestedModelName = options.modelName || "CubControl.FixedWingOuterLoop";
   const dt = clamp(finiteNumber(options.dt, 0.02), 0.005, 0.2);
   const controllerSource = source.replace(/(parameter\s+Real\s+dt\s*=\s*)[-+0-9.eE]+/, `$1${dt.toPrecision(12)}`);
-  const modelName = requestedModelName === "CubControl.FixedWingOuterLoop"
-    ? "RumocaAutopilotSession"
-    : requestedModelName;
-  const simulationSource = modelName === "RumocaAutopilotSession"
-    ? autopilotSessionSource(controllerSource, dt)
-    : controllerSource;
-  const stepper = createRumocaStepper(wasm, simulationSource, modelName, { dt });
+  const stepper = createRumocaStepper(wasm, controllerSource, requestedModelName, { dt });
   const inputNames = new Set(JSON.parse(stepper.input_names() || "[]"));
   const set = (name, value) => {
     if (inputNames.has(name)) stepper.set_input(name, finiteNumber(value));

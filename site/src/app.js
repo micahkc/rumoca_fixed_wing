@@ -2800,7 +2800,7 @@ function updateFlightSim(playback, deltaS) {
     const controlDt = state.autopilot.runner.dt || (1 / state.autopilot.updateHz);
     state.autopilot.controlAccumulator += Math.min(deltaS, controlDt * AUTOPILOT_MAX_SUBSTEPS);
     while (state.autopilot.controlAccumulator >= controlDt && substeps < AUTOPILOT_MAX_SUBSTEPS) {
-      if (performance.now() - stepStartMs > FLIGHT_STEP_BUDGET_MS) break;
+      if (substeps > 0 && performance.now() - stepStartMs > FLIGHT_STEP_BUDGET_MS) break;
       try {
         const control = state.autopilot.runner.step(sim.x);
         stick = control.stick;
@@ -2858,7 +2858,7 @@ function updateFlightSim(playback, deltaS) {
     }
     updateAutopilotEffectiveSpeed(autopilotSimAdvancedS, deltaS);
     if (substeps >= AUTOPILOT_MAX_SUBSTEPS || performance.now() - stepStartMs > FLIGHT_STEP_BUDGET_MS) {
-      state.autopilot.controlAccumulator = 0;
+      state.autopilot.controlAccumulator = Math.min(state.autopilot.controlAccumulator, controlDt);
     }
   } else {
     sim.accumulator = Math.min(sim.accumulator + deltaS, sim.dt * KEYBOARD_MAX_SUBSTEPS);
